@@ -19,31 +19,30 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const CustomerListView = () => {
+const DemandsListView = () => {
   const classes = useStyles();
   const [customers] = useState(data);
-
-  const [users, setUsers] = useState([]);
+  const [demands, setDemands] = useState([]);
 
   useEffect(() => {
-    api.get('users').then(res => {
-      setUsers(res.data.users);
+    api.get('demands').then(res => {
+      setDemands(res.data.demands.data);
     })
   }, []);
 
   return (
     <Page
       className={classes.root}
-      title="Customers"
+      title="Histórico de pedidos"
     >
       <Container maxWidth={false}>
         <Toolbar />
         <Box mt={3}>
-          <Results users={users} />
+          <Results demands={demands} />
         </Box>
       </Container>
     </Page>
   );
 };
 
-export default CustomerListView;
+export default DemandsListView;

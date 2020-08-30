@@ -25,7 +25,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const TasksProgress = ({ className, ...rest }) => {
+const TasksProgress = ({ total, className, ...rest }) => {
   const classes = useStyles();
 
   return (
@@ -51,7 +51,7 @@ const TasksProgress = ({ className, ...rest }) => {
               color="textPrimary"
               variant="h3"
             >
-              1243
+              {total}
             </Typography>
           </Grid>
           <Grid item>

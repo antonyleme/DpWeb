@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import {
@@ -49,7 +49,7 @@ const Toolbar = ({ className, ...rest }) => {
                     </InputAdornment>
                   )
                 }}
-                placeholder="Pesquisar cliente"
+                placeholder="Pesquisar pedido"
                 variant="outlined"
               />
             </Box>

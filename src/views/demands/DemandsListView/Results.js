@@ -15,9 +15,12 @@ import {
   TablePagination,
   TableRow,
   Typography,
-  makeStyles
+  makeStyles,
+  Button
 } from '@material-ui/core';
 import getInitials from 'src/utils/getInitials';
+import DemandDialog from '../../../components/DemandDialog';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -26,17 +29,27 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const Results = ({ className, users, ...rest }) => {
+const Results = ({ className, demands, ...rest }) => {
   const classes = useStyles();
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
   const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(0);
 
+  const [open, setOpen] = useState(false);
+  function handleClickOpenDialog(demand){
+    selectDemand(demand);
+    setOpen(true);
+  }
+  function handleClose(){
+    setOpen(false);
+  }
+  const [selectedDemand, selectDemand] = useState(null);
+
   const handleSelectAll = (event) => {
     let newSelectedCustomerIds;
 
     if (event.target.checked) {
-      newSelectedCustomerIds = users.map((user) => user.id);
+      newSelectedCustomerIds = demands.map((demand) => demand.id);
     } else {
       newSelectedCustomerIds = [];
     }
@@ -83,10 +96,10 @@ const Results = ({ className, users, ...rest }) => {
             <TableHead>
               <TableRow>
                 <TableCell>
-                  Nome
+                  ID
                 </TableCell>
                 <TableCell>
-                  Email
+                  Nome
                 </TableCell>
                 <TableCell>
                   Endereço
@@ -95,16 +108,18 @@ const Results = ({ className, users, ...rest }) => {
                   Celular
                 </TableCell>
                 <TableCell>
-                  Data de registro
+                  Data
+                </TableCell>
+                <TableCell>
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.slice(0, limit).map((user) => (
+              {demands.slice(0, limit).map((demand) => (
                 <TableRow
                   hover
-                  key={user.id}
-                  selected={selectedCustomerIds.indexOf(user.id) !== -1}
+                  key={demand.id}
+                  selected={selectedCustomerIds.indexOf(demand.id) !== -1}
                 >
                   <TableCell>
                     <Box
@@ -115,21 +130,42 @@ const Results = ({ className, users, ...rest }) => {
                         color="textPrimary"
                         variant="body1"
                       >
-                        {user.name}
+                        #{demand.id}
                       </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
-                    {user.email}
+                    <Box
+                      alignItems="center"
+                      display="flex"
+                    >
+                      <Typography
+                        color="textPrimary"
+                        variant="body1"
+                      >
+                        {demand.user.name}
+                      </Typography>
+                    </Box>
                   </TableCell>
                   <TableCell>
-                    {user.street + ', ' + user.number + ', ' + (user.complement ? user.complement + ', ' : '') + user.neighborhood}
+                    {demand.street + ', ' + demand.number + ', ' + (demand.complement ? demand.complement + ', ' : '') + demand.neighborhood}
                   </TableCell>
                   <TableCell>
-                    {user.tel}
+                    {demand.user.tel}
                   </TableCell>
                   <TableCell>
-                    {moment(user.created_at).format('DD/MM/YYYY')}
+                    {moment(demand.created_at).format('DD/MM/YYYY')}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      color="primary"
+                      endIcon={<VisibilityIcon />}
+                      size="small"
+                      variant="contained"
+                      onClick={() => handleClickOpenDialog(demand)}
+                    >
+                      Visualizar
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -137,13 +173,15 @@ const Results = ({ className, users, ...rest }) => {
           </Table>
         </Box>
       </PerfectScrollbar>
+
+      <DemandDialog open={open} demand={selectedDemand} handleClose={handleClose}/>
     </Card>
   );
 };
 
 Results.propTypes = {
   className: PropTypes.string,
-  users: PropTypes.array.isRequired
+  demands: PropTypes.array.isRequired
 };
 
 export default Results;

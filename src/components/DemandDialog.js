@@ -17,9 +17,33 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
+import api from '../services/api';
+import ConfirmationDialog from './DemandConfirmationDialog';
 
 const DemandDialog = (props) => {
+
+  const [openConfirmationDialog, setOpenConfirmation] = useState(false);
+  const [confirmationStatus, setConfirmationStatus] = useState();
+
+  function confirmation(status){
+    setOpenConfirmation(true);
+    setConfirmationStatus(status);
+  }
+
+  function closeConfirmation(){
+    setOpenConfirmation(false);
+  }
+
+  function updateStatus(status){
+    api.put(`dashboard/demands/${props.demand.id}/${status}`).then(res => {
+      props.updateStatus(res.data.demand);
+        props.handleClose();
+        closeConfirmation();
+    });
+  }
+
   return (
+    props.demand &&
     <Dialog
       fullWidth={true}
       maxWidth={'sm'}
@@ -27,7 +51,7 @@ const DemandDialog = (props) => {
       onClose={props.handleClose}
       aria-labelledby="max-width-dialog-title"
     >
-      <DialogTitle id="max-width-dialog-title">Pedido</DialogTitle>
+      <DialogTitle id="max-width-dialog-title">Pedido #{props.demand.id}</DialogTitle>
       <DialogContent>
         
         <Grid container spacing={3} style={{overflowY: 'hidden'}}>
@@ -37,7 +61,17 @@ const DemandDialog = (props) => {
                 Nome
               </InputLabel>
               <Typography>
-                Antony Leme
+                {props.demand.user.name}
+              </Typography>
+            </div>
+          </Grid>
+          <Grid item xs={12}>
+            <div style={{marginBottom: 15}}>
+              <InputLabel>
+                Celular
+              </InputLabel>
+              <Typography>
+                {props.demand.user.tel}
               </Typography>
             </div>
           </Grid>
@@ -48,7 +82,7 @@ const DemandDialog = (props) => {
                 Bairro
               </InputLabel>
               <Typography>
-                Taquara Preta
+                {props.demand.neighborhood}
               </Typography>
             </div>
           </Grid>
@@ -58,27 +92,32 @@ const DemandDialog = (props) => {
                 Rua
               </InputLabel>
               <Typography>
-                Rua Governador Francelino Pereira dos Santos
+                {props.demand.street}
               </Typography>
             </div>
           </Grid>
-          <Grid item lg={3} xs={12}>
+          <Grid item sm={3} xs={12}>
             <div style={{marginBottom: 15}}>
               <InputLabel>
                 Número
               </InputLabel>
               <Typography>
-                15
+                {props.demand.number}
               </Typography>
             </div>
           </Grid>
-          <Grid item lg={3} xs={12}>
+          <Grid item sm={3} xs={12}>
             <div style={{marginBottom: 15}}>
               <InputLabel>
                 Complemento
               </InputLabel>
               <Typography>
-                Apto 305
+                {
+                  props.demand.complement ?
+                  props.demand.complement
+                  :
+                  'Não se aplica'
+                }
               </Typography>
             </div>
           </Grid>
@@ -101,7 +140,12 @@ const DemandDialog = (props) => {
                 Forma de pagamento
               </InputLabel>
               <Typography>
-                Em dinheiro
+                {
+                  {
+                    'app': 'No aplicativo',
+                    'delivery': 'Na entrega'
+                  }[props.demand.payment_type]
+                }
               </Typography>
             </div>
           </Grid>
@@ -111,7 +155,22 @@ const DemandDialog = (props) => {
                 Troco para
               </InputLabel>
               <Typography>
-                R$50,00
+                {
+                  props.demand.charge_for ?
+                  `R${props.demand.charge_for.toString().replace('.', ',')}`
+                  :
+                  'Não se aplica'
+                }
+              </Typography>
+            </div>
+          </Grid>
+          <Grid item xs={12}>
+            <div style={{marginBottom: 15}}>
+              <InputLabel>
+                Observações
+              </InputLabel>
+              <Typography>
+                {props.demand.observations ? props.demand.observations : 'Nenhuma observação feita'}
               </Typography>
             </div>
           </Grid>
@@ -124,16 +183,20 @@ const DemandDialog = (props) => {
                 <TableCell align="center">#</TableCell>
                 <TableCell align="center">Produto</TableCell>
                 <TableCell align="center">Quantidade</TableCell>
-                <TableCell align="center">Valor total</TableCell>
+                <TableCell align="center">Valor</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                <TableCell component="th" scope="row" align="center"> 1 </TableCell>
-                <TableCell align="center">Cerveja 600ml apenas líquido</TableCell>
-                <TableCell align="center">2</TableCell>
-                <TableCell align="center">R$8,99</TableCell>
-              </TableRow>
+              {
+                props.demand.products.map((product, index) => (
+                  <TableRow>
+                    <TableCell component="th" scope="row" align="center"> {index + 1} </TableCell>
+                    <TableCell align="center">{product.name}</TableCell>
+                    <TableCell align="center">{product.pivot.qtd}</TableCell>
+                    <TableCell align="center">R${product.pivot.price}</TableCell>
+                  </TableRow>
+                ))
+              }
             </TableBody>
           </Table>
         </TableContainer>
@@ -144,16 +207,30 @@ const DemandDialog = (props) => {
           <Button onClick={props.handleClose} color="primary">
             Fechar
           </Button>
-          <div>
-            <Button onClick={props.handleClose} color="primary">
-              Recusar pedido
-            </Button>
-            <Button onClick={props.handleClose} color="primary" variant="contained">
-              Aceitar pedido
-            </Button>
-          </div>
+
+          {
+            {
+              'received': 
+                <div>
+                  <Button onClick={() => confirmation('refused')} color="primary">
+                    Recusar pedido
+                  </Button>
+                  <Button onClick={() => confirmation('accepted')} color="primary" variant="contained">
+                    Aceitar pedido
+                  </Button>
+                </div>,
+              'accepted': 
+                <div>
+                  <Button onClick={() => confirmation('delivered')} color="primary" variant="contained">
+                    Pedido entregue
+                  </Button>
+                </div>,
+            }[props.status]
+          }
         </div>
       </DialogActions>
+
+      <ConfirmationDialog open={openConfirmationDialog} handleClose={closeConfirmation} status={confirmationStatus} confirm={updateStatus}/>
     </Dialog>
   );
 };

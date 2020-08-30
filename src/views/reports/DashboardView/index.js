@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -14,6 +14,7 @@ import TotalCustomers from './TotalCustomers';
 import TotalProfit from './TotalProfit';
 import TrafficByDevice from './TrafficByDevice';
 import Demands from './Demands';
+import api from '../../../services/api';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,31 +28,78 @@ const useStyles = makeStyles((theme) => ({
 const Dashboard = () => {
   const classes = useStyles();
 
+  const [received, setReceived] = useState([]);
+  const [accepted, setAccepted] = useState([]);
+  const [delivered, setDelivered] = useState([]);
+
+  const [totalValue, setTotalValue] = useState(0);
+  const [totalDemands, setTotalDemands] = useState(0);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+  
+  useEffect(() => {
+    api.get('dashboard/demands/received').then(res => {
+      setReceived(res.data.demands);
+    });
+    api.get('dashboard/demands/accepted').then(res => {
+      setAccepted(res.data.demands);
+    });
+    api.get('dashboard/demands/delivered').then(res => {
+      setDelivered(res.data.demands);
+    });
+
+    api.get('dashboard').then(res => {
+      setTotalValue(res.data.totalValue);
+      setTotalDemands(res.data.totalDemands);
+      setTotalProducts(res.data.totalProducts);
+      setTotalUsers(res.data.totalUsers);
+    })
+  }, []);
+
+  function updateStatus(updatedDemand){
+
+    switch(updatedDemand.status){
+      case 'accepted':
+        setReceived(received.filter(demand => demand.id != updatedDemand.id));
+        setAccepted([...accepted, updatedDemand]);
+        break;
+      case 'delivered':
+        setAccepted(accepted.filter(demand => demand.id != updatedDemand.id));
+        setDelivered([...delivered, updatedDemand]);
+        break;
+      default:
+        setReceived(received.filter(demand => demand.id != updatedDemand.id));
+        return;
+    }
+  }
+
+
+
   return (
     <Page className={classes.root} title="Pedidos">
       <Container maxWidth={false}>
         <Grid container spacing={3}>
           <Grid item lg={3} sm={6} xl={3} xs={12}>
-            <TotalProfit />
+            <TotalProfit total={totalValue}/>
           </Grid>
           <Grid item lg={3} sm={6} xl={3} xs={12}>
-            <Budget />
+            <Budget total={totalDemands}/>
           </Grid>
           <Grid item lg={3} sm={6} xl={3} xs={12}>
-            <TotalCustomers />
+            <TotalCustomers total={totalUsers}/>
           </Grid>
           <Grid item lg={3} sm={6} xl={3} xs={12}>
-            <TasksProgress />
+            <TasksProgress total={totalProducts}/>
           </Grid>
 
           <Grid item lg={4} md={6} xl={3} xs={12}>
-            <Demands title="Pedidos pendentes"/>
+            <Demands title="Pedidos pendentes" status="received" demands={received} updateStatus={updateStatus}/>
           </Grid>
           <Grid item lg={4} md={6} xl={3} xs={12}>
-            <Demands title="Pedidos aceitos"/>
+            <Demands title="Pedidos aceitos" status="accepted" demands={accepted} updateStatus={updateStatus}/>
           </Grid>
           <Grid item lg={4} md={6} xl={3} xs={12}>
-            <Demands title="Pedidos entregues"/>
+            <Demands title="Pedidos entregues" status="delivered" demands={delivered} updateStatus={updateStatus}/>
           </Grid>
           
         </Grid>

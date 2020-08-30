@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const Budget = ({ className, ...rest }) => {
+const Budget = ({ total, className, ...rest }) => {
   const classes = useStyles();
 
   return (
@@ -52,13 +52,14 @@ const Budget = ({ className, ...rest }) => {
               gutterBottom
               variant="h6"
             >
-              TOTAL DE PEDIDOS HOJE
+              
+              PEDIDOS HOJE
             </Typography>
             <Typography
               color="textPrimary"
               variant="h3"
             >
-              123
+              {total}
             </Typography>
           </Grid>
           <Grid item>

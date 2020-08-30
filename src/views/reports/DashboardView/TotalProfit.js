@@ -23,7 +23,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const TotalProfit = ({ className, ...rest }) => {
+const TotalProfit = ({ total, className, ...rest }) => {
   const classes = useStyles();
 
   return (
@@ -43,13 +43,13 @@ const TotalProfit = ({ className, ...rest }) => {
               gutterBottom
               variant="h6"
             >
-              FATURAMENTO TOTAL HOJE
+              TOTAL HOJE
             </Typography>
             <Typography
               color="textPrimary"
               variant="h3"
             >
-              $23,200
+              ${total.toString().replace('.', ',')}
             </Typography>
           </Grid>
           <Grid item>

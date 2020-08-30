@@ -20,39 +20,6 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import DemandDialog from '../../../components/DemandDialog';
 
-const data = [
-  {
-    id: uuid(),
-    name: 'Dropbox',
-    imageUrl: '/static/images/products/product_1.png',
-    updatedAt: moment().subtract(2, 'hours')
-  },
-  {
-    id: uuid(),
-    name: 'Medium Corporation',
-    imageUrl: '/static/images/products/product_2.png',
-    updatedAt: moment().subtract(2, 'hours')
-  },
-  {
-    id: uuid(),
-    name: 'Slack',
-    imageUrl: '/static/images/products/product_3.png',
-    updatedAt: moment().subtract(3, 'hours')
-  },
-  {
-    id: uuid(),
-    name: 'Lyft',
-    imageUrl: '/static/images/products/product_4.png',
-    updatedAt: moment().subtract(5, 'hours')
-  },
-  {
-    id: uuid(),
-    name: 'GitHub',
-    imageUrl: '/static/images/products/product_5.png',
-    updatedAt: moment().subtract(9, 'hours')
-  }
-];
-
 const useStyles = makeStyles(({
   root: {
     height: '100%'
@@ -63,14 +30,15 @@ const useStyles = makeStyles(({
   }
 }));
 
-const Demands = ({ className, title, status, ...rest }) => {
+const Demands = ({ updateStatus, demands, className, title, status, ...rest }) => {
   const classes = useStyles();
-  const [products] = useState(data);
 
   const [openDialog, setOpen] = useState(false);
+  const [openDemand, setOpenDemand] = useState(false);
 
-  const handleClickOpenDialog = () => {
+  const handleClickOpenDialog = (demand) => {
     setOpen(true);
+    setOpenDemand(demand);
   };
 
   const handleCloseDialog = () => {
@@ -83,26 +51,26 @@ const Demands = ({ className, title, status, ...rest }) => {
       {...rest}
     >
       <CardHeader
-        subtitle={`${products.length} in total`}
+        subtitle={`${demands.length} in total`}
         title={title}
       />
       <Divider />
       <List>
-        {products.map((product, i) => (
+        {demands.map((demand, i) => (
           <ListItem
-            divider={i < products.length - 1}
-            key={product.id}
+            divider={i < demands.length - 1}
+            key={demand.id}
           >
             <ListItemText
-              primary={product.name}
-              secondary={`Updated ${product.updatedAt.fromNow()}`}
+              primary={`#${demand.id}`}
+              secondary={`Às ${demand.time} pra ${demand.neighborhood}`}
             />
             <Button
               color="primary"
               endIcon={<VisibilityIcon />}
               size="small"
               variant="contained"
-              onClick={handleClickOpenDialog}
+              onClick={() => handleClickOpenDialog(demand)}
             >
               Visualizar
             </Button>
@@ -117,9 +85,7 @@ const Demands = ({ className, title, status, ...rest }) => {
       >
       </Box>
 
-      <DemandDialog open={openDialog} handleClickOpen={handleClickOpenDialog} handleClose={handleCloseDialog}>
-          
-      </DemandDialog>
+      <DemandDialog open={openDialog} handleClickOpen={handleClickOpenDialog} handleClose={handleCloseDialog} status={status} demand={openDemand} updateStatus={updateStatus}/>
     </Card>
   );
 };
