@@ -8,9 +8,9 @@ import {
 } from '@material-ui/core';
 import { Pagination } from '@material-ui/lab';
 import Page from 'src/components/Page';
+import BannerCard from './BannerCard';
 import Toolbar from './Toolbar';
-import ProductCard from './ProductCard';
-import api from '../../../services/api';
+import api from '../../services/api';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { Navigate } from 'react-router-dom';
@@ -29,26 +29,22 @@ const useStyles = makeStyles((theme) => ({
 
 const ProductList = () => {
   const classes = useStyles();
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const token = useSelector(state => state.auth.token);
 
   useEffect(() => {
     if(token){
-      api.get('products').then(res => {
-        setProducts(res.data.products);
+      api.get('banners').then(res => {
+        setBanners(res.data.banners);
         setLoading(false)
-      });
-      api.get('categories').then(res => {
-        setCategories(res.data.categories);
       });
     }
   }, []);
 
-  const removeProduct = (id) => {
-    setProducts(products.filter(product => product.id != id));
+  const removeBanner = (id) => {
+    setBanners(banners.filter(banner => banner.id != id));
   }
 
   return (
@@ -57,28 +53,27 @@ const ProductList = () => {
     :
     <Page
       className={classes.root}
-      title="Products"
+      title="Banners"
     >
       <Container maxWidth={false}>
-        <Toolbar categories={categories} products={products} setProducts={setProducts}/>
+        <Toolbar banners={banners} setBanners={setBanners}/>
         <Box mt={3}>
           <Grid
             container
             spacing={3}
           >
-            {products.map((product) => (
+            {banners.map((banner) => (
               <Grid
                 item
-                key={product.id}
+                key={banner.id}
                 lg={3}
                 md={4}
                 xs={12}
               >
-                <ProductCard
+                <BannerCard
                   className={classes.productCard}
-                  product={product}
-                  categories={categories}
-                  removeProduct={removeProduct}
+                  banner={banner}
+                  removeBanner={removeBanner}
                 />
               </Grid>
             ))}

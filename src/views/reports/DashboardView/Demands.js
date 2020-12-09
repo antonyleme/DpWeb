@@ -30,7 +30,7 @@ const useStyles = makeStyles(({
   }
 }));
 
-const Demands = ({ updateStatus, demands, className, title, status, ...rest }) => {
+const Demands = ({ updateStatus, demands, className, title, status, deliveryTax, ...rest }) => {
   const classes = useStyles();
 
   const [openDialog, setOpen] = useState(false);
@@ -63,7 +63,7 @@ const Demands = ({ updateStatus, demands, className, title, status, ...rest }) =
           >
             <ListItemText
               primary={`#${demand.id}`}
-              secondary={`Às ${demand.time} pra ${demand.neighborhood}`}
+              secondary={`Às ${demand.time}`}
             />
             <Button
               color="primary"
@@ -85,7 +85,7 @@ const Demands = ({ updateStatus, demands, className, title, status, ...rest }) =
       >
       </Box>
 
-      <DemandDialog open={openDialog} handleClickOpen={handleClickOpenDialog} handleClose={handleCloseDialog} status={status} demand={openDemand} updateStatus={updateStatus}/>
+      <DemandDialog deliveryTax={deliveryTax} open={openDialog} handleClickOpen={handleClickOpenDialog} handleClose={handleCloseDialog} status={status} demand={openDemand} updateStatus={updateStatus}/>
     </Card>
   );
 };

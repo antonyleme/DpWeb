@@ -21,7 +21,9 @@ import {
   User as UserIcon,
   UserPlus as UserPlusIcon,
   Users as UsersIcon,
-  List as ListIcon
+  List as ListIcon,
+  Zap as ZapIcon,
+  DollarSign as DollarSignIcon
 } from 'react-feather';
 import NavItem from './NavItem';
 
@@ -32,9 +34,9 @@ const items = [
     title: 'Pedidos'
   },
   {
-    href: '/app/customers',
-    icon: UsersIcon,
-    title: 'Clientes'
+    href: '/app/finance',
+    icon: DollarSignIcon,
+    title: 'Financeiro'
   },
   {
     href: '/app/products',
@@ -47,10 +49,21 @@ const items = [
     title: 'Histórico de pedidos'
   },
   {
+    href: '/app/banners',
+    icon: ZapIcon,
+    title: 'Banners'
+  },
+  {
+    href: '/app/customers',
+    icon: UsersIcon,
+    title: 'Clientes'
+  },
+  /*
+  {
     href: '/login',
     icon: LockIcon,
     title: 'Login'
-  },
+  },*/
 ];
 
 const useStyles = makeStyles(() => ({

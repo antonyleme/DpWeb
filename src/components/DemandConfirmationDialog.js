@@ -5,6 +5,9 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Typography from '@material-ui/core/Typography';
+import {
+  CircularProgress
+} from '@material-ui/core';
 
 const DemandConfirmationDialog = (props) => {
 
@@ -40,15 +43,20 @@ const DemandConfirmationDialog = (props) => {
           </Button>
 
           <div>
-            <Button onClick={() => props.confirm(props.status)} color="primary" variant="contained">
-              {
+            {
+              props.loading ?
+              <CircularProgress/>
+              :
+              <Button onClick={() => props.confirm(props.status)} color="primary" variant="contained">
                 {
-                  'accepted': 'Aceitar pedido',
-                  'refused': 'Recusar pedido',
-                  'delivered': 'Marcar como entregue',
-                }[props.status]
-              }
-            </Button>
+                  {
+                    'accepted': 'Aceitar pedido',
+                    'refused': 'Recusar pedido',
+                    'delivered': 'Marcar como entregue',
+                  }[props.status]
+                }
+              </Button>
+            }
           </div>
         </div>
       </DialogActions>

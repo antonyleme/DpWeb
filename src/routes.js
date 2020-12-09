@@ -9,6 +9,8 @@ import NotFoundView from 'src/views/errors/NotFoundView';
 import ProductListView from 'src/views/product/ProductListView';
 import RegisterView from 'src/views/auth/RegisterView';
 import DemandsListView from 'src/views/demands/DemandsListView';
+import FinanceView from 'src/views/finance/FinanceView';
+import Banners from 'src/views/banners';
 
 const routes = [
   {
@@ -17,8 +19,10 @@ const routes = [
     children: [
       { path: 'customers', element: <CustomerListView /> },
       { path: 'dashboard', element: <DashboardView /> },
+      { path: 'finance', element: <FinanceView /> },
       { path: 'products', element: <ProductListView /> },
       { path: 'demands', element: <DemandsListView /> },
+      { path: 'banners', element: <Banners /> },
       { path: '*', element: <Navigate to="/404" /> }
     ]
   },

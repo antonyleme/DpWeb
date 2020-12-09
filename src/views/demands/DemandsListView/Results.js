@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const Results = ({ className, demands, ...rest }) => {
+const Results = ({ className, searchId, demands, ...rest }) => {
   const classes = useStyles();
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
   const [limit, setLimit] = useState(10);
@@ -99,6 +99,9 @@ const Results = ({ className, demands, ...rest }) => {
                   ID
                 </TableCell>
                 <TableCell>
+                  Venda
+                </TableCell>
+                <TableCell>
                   Nome
                 </TableCell>
                 <TableCell>
@@ -116,6 +119,66 @@ const Results = ({ className, demands, ...rest }) => {
             </TableHead>
             <TableBody>
               {demands.slice(0, limit).map((demand) => (
+                searchId.length > 0 ?
+                  (
+                    demand.id == searchId &&
+                      <TableRow
+                        hover
+                        key={demand.id}
+                        selected={selectedCustomerIds.indexOf(demand.id) !== -1}
+                      >
+                        <TableCell>
+                          <Box
+                            alignItems="center"
+                            display="flex"
+                          >
+                            <Typography
+                              color="textPrimary"
+                              variant="body1"
+                            >
+                              #{demand.id}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          {demand.status == 'balcony' ? 'Balcão' : 'App'}
+                        </TableCell>
+                        <TableCell>
+                          <Box
+                            alignItems="center"
+                            display="flex"
+                          >
+                            <Typography
+                              color="textPrimary"
+                              variant="body1"
+                            >
+                              {demand.status != 'balcony' && demand.user.name}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          { demand.status != 'balcony' && (demand.street + ', ' + demand.number + ', ' + (demand.complement ? demand.complement + ', ' : '') + demand.neighborhood)}
+                        </TableCell>
+                        <TableCell>
+                          {demand.status != 'balcony' && demand.user.tel}
+                        </TableCell>
+                        <TableCell>
+                          {moment(demand.created_at).format('DD/MM/YYYY')}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            color="primary"
+                            endIcon={<VisibilityIcon />}
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleClickOpenDialog(demand)}
+                          >
+                            Visualizar
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                  )
+                :
                 <TableRow
                   hover
                   key={demand.id}
@@ -135,6 +198,9 @@ const Results = ({ className, demands, ...rest }) => {
                     </Box>
                   </TableCell>
                   <TableCell>
+                    {demand.status == 'balcony' ? 'Balcão' : 'App'}
+                  </TableCell>
+                  <TableCell>
                     <Box
                       alignItems="center"
                       display="flex"
@@ -143,15 +209,15 @@ const Results = ({ className, demands, ...rest }) => {
                         color="textPrimary"
                         variant="body1"
                       >
-                        {demand.user.name}
+                        {demand.status != 'balcony' && demand.user.name}
                       </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
-                    {demand.street + ', ' + demand.number + ', ' + (demand.complement ? demand.complement + ', ' : '') + demand.neighborhood}
+                    { demand.status != 'balcony' && (demand.street + ', ' + demand.number + ', ' + (demand.complement ? demand.complement + ', ' : '') + demand.neighborhood)}
                   </TableCell>
                   <TableCell>
-                    {demand.user.tel}
+                    {demand.status != 'balcony' && demand.user.tel}
                   </TableCell>
                   <TableCell>
                     {moment(demand.created_at).format('DD/MM/YYYY')}

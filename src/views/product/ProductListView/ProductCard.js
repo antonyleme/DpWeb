@@ -14,9 +14,12 @@ import {
   TextField,
   FormControl,
   MenuItem,
-  CircularProgress
+  CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from '@material-ui/core';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import AcUnitIcon from '@material-ui/icons/AcUnit';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import ProductDialog from '../../../components/ProductDialog';
 import api from '../../../services/api';
@@ -35,6 +38,10 @@ const useStyles = makeStyles((theme) => ({
   },
   margin: {
     marginBottom: theme.spacing(3),
+  },
+  coldIcon: {
+    marginRight: theme.spacing(1),
+    color: 'blue',
   }
 }));
 
@@ -53,19 +60,26 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
 
   const [name, setName] = useState(product.name);
   const [price, setPrice] = useState(product.price);
+  const [promocionalPrice, setPromocionalPrice] = useState(product.promo_price);
   const [category, setCategory] = useState(product.category_id);
-  const [available, setAvailable] = useState(product.available);
+  const [available, setAvailable] = useState(product.qtd > 0);
+  const [qtd, setQtd] = useState(product.qtd);
+  const [cold, setCold] = useState(product.cold);
   const [submiting, setSubmiting] = useState(false);
 
   const submit = () => {
-
-  }
-
-  const changeAvailable = (value) => {
-    setAvailable(value);
+    setSubmiting(true);
     api.put(`products/${product.id}`, {
-      available: value
-    });
+      name,
+      price: parseFloat(price.toString().replace(',', '.')),
+      promo_price: parseFloat(promocionalPrice.toString().replace(',', '.')),
+      category_id: category,
+      qtd,
+      cold: cold ? 1 : 0,
+    }).then(res => {
+      setSubmiting(false);
+      handleCloseDialog();
+    })
   }
 
   const deleteProduct = () => {
@@ -80,12 +94,16 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
       style={{opacity: available ? 1 : 0.6}}
     >
       <CardContent>
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 20, opacity: cold == 1 ? 1 : 0}}>
+          <AcUnitIcon className={classes.coldIcon} />
+          <Typography align="center" color="textPrimary">Gelada</Typography>
+        </div>
         <Box
           display="flex"
           justifyContent="center"
           mb={3}
         >
-          <img src={`http://10.0.0.133:8000/${product.imgPath}`} style={{maxWidth: 150, maxHeight: 150}}/>
+          <img src={`https://api.dp.codenative.com.br/${product.imgPath}`} style={{maxWidth: 150, maxHeight: 150}}/>
         </Box>
         <Typography
           align="center"
@@ -98,29 +116,18 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
         <Typography
           align="center"
           color="textPrimary"
+          gutterBottom
+          variant="h6"
+        >
+          {product.qtd} unidade{product.qtd > 1 ? 's' : ''}
+        </Typography>
+        <Typography
+          align="center"
+          color="textPrimary"
           variant="body1"
         >
-          R${product.price}
+          R${parseFloat(product.price).toFixed(2).replace('.', ',')}
         </Typography>
-        
-        <div style={{textAlign: 'center'}}>
-        <FormControl>
-            <TextField
-              id="standard-select-currency"
-              select
-              onChange={(e) => changeAvailable(e.target.value)}
-              value={available}
-              required
-            >
-              <MenuItem value={1}>
-                Em estoque
-              </MenuItem>
-              <MenuItem value={0}>
-                Sem estoque
-              </MenuItem>
-            </TextField>
-          </FormControl>
-        </div>
       </CardContent>
       <Box flexGrow={1} />
       <Divider />
@@ -186,7 +193,7 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
                   <CircularProgress/>
                 :
                 <Button onClick={submit} color="primary" variant="contained">
-                  Cadastrar
+                  Salvar
                 </Button>
               }
             </div>
@@ -198,7 +205,7 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
           <FormControl fullWidth className={classes.margin}>
             <div style={{display: 'flex', alignItems: 'center'}}>
               <div>
-                <img src={`http://10.0.0.133:8000/${product.imgPath}`} style={{height: 100, marginRight: 10}}/>
+                <img src={`https://api.dp.codenative.com.br/${product.imgPath}`} style={{height: 100, marginRight: 10}}/>
               </div>
               <div>
                 <Typography>Foto do produto</Typography>
@@ -211,6 +218,12 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
             <TextField type="number" id="standard-basic" label="Preço do produto" defaultValue={price} onChange={(e) => setPrice(e.target.value)} required/>
+          </FormControl>
+          <FormControl fullWidth className={classes.margin}>
+            <TextField type="number" id="standard-basic" label="Preço promocional (+10uni.)" defaultValue={promocionalPrice} onChange={(e) => setPromocionalPrice(e.target.value)} required/>
+          </FormControl>
+          <FormControl fullWidth className={classes.margin}>
+            <TextField type="number" id="standard-basic" label="Estoque" defaultValue={qtd} onChange={(e) => setQtd(e.target.value)} required/>
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
             <TextField
@@ -230,6 +243,12 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
                 ))
               }
             </TextField>
+          </FormControl>
+          <FormControl>
+            <FormControlLabel
+              control={<Checkbox checked={cold} onChange={() => setCold(!cold)} name="gelada" />}
+              label="Gelada"
+            />
           </FormControl>
         </form>
       </ProductDialog>

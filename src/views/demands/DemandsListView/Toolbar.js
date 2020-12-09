@@ -20,11 +20,27 @@ const useStyles = makeStyles((theme) => ({
   },
   exportButton: {
     marginRight: theme.spacing(1)
+  },
+  flex: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   }
 }));
 
-const Toolbar = ({ className, ...rest }) => {
+const Toolbar = ({ className, changeDate, searchId, setSearchId, ...rest }) => {
   const classes = useStyles();
+
+  const [date, setDate] = useState(new Date());
+
+  function setNewDate(date){
+    setDate(date);
+
+    var newDate = date.replace('/', '-');
+
+    changeDate(newDate);
+  }
 
   return (
     <div
@@ -34,25 +50,39 @@ const Toolbar = ({ className, ...rest }) => {
       <Box mt={3}>
         <Card>
           <CardContent>
-            <Box maxWidth={500}>
+            <div className={classes.flex}>
+              <Box maxWidth={500}>
+                <TextField
+                  fullWidth
+                  defaultValue={searchId}
+                  onChange={(e) => setSearchId(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SvgIcon
+                          fontSize="small"
+                          color="action"
+                        >
+                          <SearchIcon />
+                        </SvgIcon>
+                      </InputAdornment>
+                    )
+                  }}
+                  placeholder="Pesquisar pedido"
+                  variant="outlined"
+                />
+              </Box>
               <TextField
-                fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SvgIcon
-                        fontSize="small"
-                        color="action"
-                      >
-                        <SearchIcon />
-                      </SvgIcon>
-                    </InputAdornment>
-                  )
+                id="date"
+                label="Data"
+                type="date"
+                defaultValue={date}
+                InputLabelProps={{
+                  shrink: true,
                 }}
-                placeholder="Pesquisar pedido"
-                variant="outlined"
+                onChange={(e) => setNewDate(e.target.value)}
               />
-            </Box>
+            </div>
           </CardContent>
         </Card>
       </Box>

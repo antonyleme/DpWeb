@@ -10,6 +10,9 @@ import Toolbar from './Toolbar';
 import data from './data';
 import api from '../../../services/api';
 
+import { useSelector, useDispatch } from 'react-redux';
+import { Navigate } from 'react-router-dom';
+
 const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.dark,
@@ -25,13 +28,20 @@ const CustomerListView = () => {
 
   const [users, setUsers] = useState([]);
 
+  const token = useSelector(state => state.auth.token);
+
   useEffect(() => {
-    api.get('users').then(res => {
-      setUsers(res.data.users);
-    })
+    if(token){
+      api.get('users').then(res => {
+        setUsers(res.data.users);
+      })
+    }
   }, []);
 
   return (
+    token == null ?
+    <Navigate to="/login"/>
+    :
     <Page
       className={classes.root}
       title="Customers"

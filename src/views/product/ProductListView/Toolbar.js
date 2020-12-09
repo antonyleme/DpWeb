@@ -14,7 +14,9 @@ import {
   MenuItem,
   Typography,
   Menu,
-  CircularProgress
+  CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from '@material-ui/core';
 import { Search as SearchIcon } from 'react-feather';
 import ProductDialog from '../../../components/ProductDialog';
@@ -39,10 +41,26 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
     setOpen(false);
   };
 
+  const [openDialogQtd, setOpenQtd] = useState(false);
+
+  const handleClickOpenDialogQtd = () => {
+    setOpenQtd(true);
+  };
+
+  const handleCloseDialogQtd = () => {
+    setOpenQtd(false);
+  };
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProductQtd, setSelectedProductQtd] = useState('');
+
   const [name, setName] = useState();
   const [price, setPrice] = useState();
+  const [promocionalPrice, setPromocionalPrice] = useState();
   const [category, setCategory] = useState();
   const [submiting, setSubmiting] = useState(false);
+  const [cold, setCold] = useState(false);
+  const [qtd, setQtd] = useState();
 
   const submit = () => {
     let file = document.getElementById('file').files[0];
@@ -51,9 +69,12 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
       setSubmiting(true);
       var formData = new FormData();
       formData.append('name', name);
-      formData.append('price', price);
+      formData.append('price', parseFloat(price.toString().replace(',', '.')));
+      formData.append('promo_price', parseFloat(promocionalPrice.toString().replace(',', '.')));
       formData.append('category_id', category);
       formData.append('img', file);
+      formData.append('cold', cold ? 1 : 0);
+      formData.append('qtd', qtd);
       api.post('products', formData).then(res => {
         setProducts([res.data.product, ...products]);
         handleCloseDialog();
@@ -61,9 +82,24 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
         setName("");
         setPrice("");
         setCategory("");
+        setCold(false);
+        setQtd("");
       });
     }
   };
+
+  const updateQtd = () => {
+    if(selectedProduct && selectedProductQtd){
+      setSubmiting(true);
+      api.put(`products/entry/${selectedProduct}`, {
+        qtd: selectedProductQtd,
+      }).then(res => {
+        handleCloseDialogQtd();
+        setSubmiting(false);
+        setSelectedProductQtd('');
+      });
+    }
+  }
 
   return (
     <div
@@ -78,8 +114,16 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
           color="primary"
           variant="contained"
           onClick={handleClickOpenDialog}
+          style={{marginRight: 10}}
         >
           NOVO PRODUTO
+        </Button>
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={handleClickOpenDialogQtd}
+        >
+          NOVA ENTRADA
         </Button>
       </Box>
 
@@ -101,7 +145,7 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
                     </InputAdornment>
                   )
                 }}
-                placeholder="Search product"
+                placeholder="Pesquisar produto"
                 variant="outlined"
               />
             </Box>
@@ -141,6 +185,12 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
             <TextField type="number" id="standard-basic" label="Preço do produto" onChange={(e) => setPrice(e.target.value)} required/>
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
+            <TextField type="number" id="standard-basic" label="Preço promocional (+10uni.)" onChange={(e) => setPromocionalPrice(e.target.value)} required/>
+          </FormControl>
+          <FormControl fullWidth className={classes.margin}>
+            <TextField type="number" id="standard-basic" label="Estoque" onChange={(e) => setQtd(e.target.value)} required/>
+          </FormControl>
+          <FormControl fullWidth className={classes.margin}>
             <TextField
               id="standard-select-currency"
               select
@@ -157,6 +207,57 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
                 ))
               }
             </TextField>
+          </FormControl>
+          <FormControl>
+            <FormControlLabel
+              control={<Checkbox checked={cold} onChange={() => setCold(!cold)} name="gelada" />}
+              label="Gelada"
+            />
+          </FormControl>
+        </form>
+      </ProductDialog>
+      
+      <ProductDialog 
+        open={openDialogQtd} 
+        handleClickOpen={handleClickOpenDialogQtd} 
+        handleClose={handleCloseDialogQtd}
+        actions={
+          <>
+            <Button onClick={handleCloseDialogQtd} color="primary">
+              Fechar
+            </Button>
+            {
+              submiting ?
+                <CircularProgress/>
+              :
+              <Button onClick={updateQtd} color="primary" variant="contained">
+                Registrar
+              </Button>
+            }
+          </>
+        }
+      >
+        <form>
+          <FormControl fullWidth className={classes.margin}>
+            <TextField
+              id="standard-select-currency"
+              select
+              label="Produto"
+              helperText="Seleciono produto"
+              onChange={(e) => setSelectedProduct(e.target.value)}
+              required
+            >
+              {
+                products.map(product => (
+                  <MenuItem value={product.id}>
+                    {product.name} ({parseFloat(product.price).toFixed(2).toString().replace('.', ',')})
+                  </MenuItem>
+                ))
+              }
+            </TextField>
+          </FormControl>
+          <FormControl fullWidth className={classes.margin}>
+            <TextField type="number" id="standard-basic" label="Quantidade" value={selectedProductQtd} onChange={(e) => setSelectedProductQtd(e.target.value)} required/>
           </FormControl>
         </form>
       </ProductDialog>

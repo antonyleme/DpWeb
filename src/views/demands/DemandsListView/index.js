@@ -10,6 +10,9 @@ import Toolbar from './Toolbar';
 import data from './data';
 import api from '../../../services/api';
 
+import { useSelector, useDispatch } from 'react-redux';
+import { Navigate } from 'react-router-dom';
+
 const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.dark,
@@ -24,21 +27,42 @@ const DemandsListView = () => {
   const [customers] = useState(data);
   const [demands, setDemands] = useState([]);
 
+  const [searchId, setSearchId] = useState('');
+
+  const token = useSelector(state => state.auth.token);
+
   useEffect(() => {
-    api.get('demands').then(res => {
-      setDemands(res.data.demands.data);
-    })
+    if(token){
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      var yyyy = today.getFullYear();
+  
+      today = yyyy + '-' + mm + '-' + dd;
+      api.get(`demands/${today}`).then(res => {
+        setDemands(res.data.demands);
+      });
+    }
   }, []);
 
+  function changeDate(date){
+    api.get(`demands/${date}`).then(res => {
+      setDemands(res.data.demands);
+    });
+  }
+
   return (
+    token == null ?
+    <Navigate to="/login"/>
+    :
     <Page
       className={classes.root}
       title="Histórico de pedidos"
     >
       <Container maxWidth={false}>
-        <Toolbar />
+        <Toolbar changeDate={changeDate} setSearchId={setSearchId} searchId={searchId} />
         <Box mt={3}>
-          <Results demands={demands} />
+          <Results demands={demands} searchId={searchId} />
         </Box>
       </Container>
     </Page>
