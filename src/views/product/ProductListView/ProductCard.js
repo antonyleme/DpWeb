@@ -45,7 +45,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const ProductCard = ({ className, categories, product, removeProduct, ...rest }) => {
+const ProductCard = ({ className, categories, product, removeProduct, products, setProducts, ...rest }) => {
   const classes = useStyles();
 
   const [openDialog, setOpen] = useState(false);
@@ -69,16 +69,33 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
 
   const submit = () => {
     setSubmiting(true);
-    api.put(`products/${product.id}`, {
-      name,
-      price: parseFloat(price.toString().replace(',', '.')),
-      promo_price: parseFloat(promocionalPrice.toString().replace(',', '.')),
-      category_id: category,
-      qtd,
-      cold: cold ? 1 : 0,
-    }).then(res => {
+
+    let formData = new FormData();
+    formData.append('id', product.id);
+    formData.append('name', name);
+    formData.append('price', parseFloat(price.toString().replace(',', '.')));
+    formData.append('promo_price', parseFloat(promocionalPrice.toString().replace(',', '.')));
+    formData.append('category_id', category);
+    formData.append('qtd', qtd);
+    formData.append('cold', cold ? 1 : 0);
+    formData.append('img', document.getElementById('productImg').files[0]);
+    api.post(`products/update/product`, formData).then(res => {
       setSubmiting(false);
       handleCloseDialog();
+      document.getElementById('productImg').value = "";
+      let p = products;
+      for(let i = 0; i < p.length; i++){
+        if(p[i].id == product.id){
+          p[i].name = res.data.product.name;
+          p[i].price = res.data.product.price;
+          p[i].promo_price = res.data.product.promocionalPrice;
+          p[i].category_id = res.data.product.category;
+          p[i].qtd = res.data.product.qtd;
+          p[i].cold = res.data.product.cold;
+          p[i].imgPath = res.data.product.imgPath;
+        }
+      }
+      setProducts([...p]);
     })
   }
 
@@ -209,7 +226,7 @@ const ProductCard = ({ className, categories, product, removeProduct, ...rest })
               </div>
               <div>
                 <Typography>Foto do produto</Typography>
-                <input type="file" id="file"/>
+                <input type="file" id="productImg"/>
               </div>
             </div>
           </FormControl>

@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
+const Toolbar = ({ className, categories, setProducts, products, searchTerm, setSearchTerm, ...rest }) => {
   const classes = useStyles();
 
   const [openDialog, setOpen] = useState(false);
@@ -65,7 +65,7 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
   const submit = () => {
     let file = document.getElementById('file').files[0];
 
-    if(name && price && category && file){
+    if (name && price && category && file) {
       setSubmiting(true);
       var formData = new FormData();
       formData.append('name', name);
@@ -89,7 +89,7 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
   };
 
   const updateQtd = () => {
-    if(selectedProduct && selectedProductQtd){
+    if (selectedProduct && selectedProductQtd) {
       setSubmiting(true);
       api.put(`products/entry/${selectedProduct}`, {
         qtd: selectedProductQtd,
@@ -114,7 +114,7 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
           color="primary"
           variant="contained"
           onClick={handleClickOpenDialog}
-          style={{marginRight: 10}}
+          style={{ marginRight: 10 }}
         >
           NOVO PRODUTO
         </Button>
@@ -147,15 +147,17 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
                 }}
                 placeholder="Pesquisar produto"
                 variant="outlined"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </Box>
           </CardContent>
         </Card>
       </Box>
 
-      <ProductDialog 
-        open={openDialog} 
-        handleClickOpen={handleClickOpenDialog} 
+      <ProductDialog
+        open={openDialog}
+        handleClickOpen={handleClickOpenDialog}
         handleClose={handleCloseDialog}
         actions={
           <>
@@ -164,10 +166,10 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
             </Button>
             {
               submiting ?
-                <CircularProgress/>
-              :
-              <Button onClick={submit} color="primary" variant="contained">
-                Cadastrar
+                <CircularProgress />
+                :
+                <Button onClick={submit} color="primary" variant="contained">
+                  Cadastrar
               </Button>
             }
           </>
@@ -176,19 +178,19 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
         <form>
           <FormControl fullWidth className={classes.margin}>
             <Typography>Foto do produto</Typography>
-            <input type="file" id="file" required/>
+            <input type="file" id="file" required />
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
-            <TextField id="standard-basic" label="Nome do produto" onChange={(e) => setName(e.target.value)} required/>
+            <TextField id="standard-basic" label="Nome do produto" onChange={(e) => setName(e.target.value)} required />
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
-            <TextField type="number" id="standard-basic" label="Preço do produto" onChange={(e) => setPrice(e.target.value)} required/>
+            <TextField type="number" id="standard-basic" label="Preço do produto" onChange={(e) => setPrice(e.target.value)} required />
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
-            <TextField type="number" id="standard-basic" label="Preço promocional (+10uni.)" onChange={(e) => setPromocionalPrice(e.target.value)} required/>
+            <TextField type="number" id="standard-basic" label="Preço promocional (+10uni.)" onChange={(e) => setPromocionalPrice(e.target.value)} required />
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
-            <TextField type="number" id="standard-basic" label="Estoque" onChange={(e) => setQtd(e.target.value)} required/>
+            <TextField type="number" id="standard-basic" label="Estoque" onChange={(e) => setQtd(e.target.value)} required />
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
             <TextField
@@ -216,10 +218,10 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
           </FormControl>
         </form>
       </ProductDialog>
-      
-      <ProductDialog 
-        open={openDialogQtd} 
-        handleClickOpen={handleClickOpenDialogQtd} 
+
+      <ProductDialog
+        open={openDialogQtd}
+        handleClickOpen={handleClickOpenDialogQtd}
         handleClose={handleCloseDialogQtd}
         actions={
           <>
@@ -228,10 +230,10 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
             </Button>
             {
               submiting ?
-                <CircularProgress/>
-              :
-              <Button onClick={updateQtd} color="primary" variant="contained">
-                Registrar
+                <CircularProgress />
+                :
+                <Button onClick={updateQtd} color="primary" variant="contained">
+                  Registrar
               </Button>
             }
           </>
@@ -257,7 +259,7 @@ const Toolbar = ({ className, categories, setProducts, products, ...rest }) => {
             </TextField>
           </FormControl>
           <FormControl fullWidth className={classes.margin}>
-            <TextField type="number" id="standard-basic" label="Quantidade" value={selectedProductQtd} onChange={(e) => setSelectedProductQtd(e.target.value)} required/>
+            <TextField type="number" id="standard-basic" label="Quantidade" value={selectedProductQtd} onChange={(e) => setSelectedProductQtd(e.target.value)} required />
           </FormControl>
         </form>
       </ProductDialog>

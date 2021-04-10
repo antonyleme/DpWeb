@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import {
@@ -27,11 +27,15 @@ import {
   Grid,
   IconButton,
 } from '@material-ui/core';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { Search as SearchIcon } from 'react-feather';
 import ProductDialog from '../../../components/ProductDialog';
 import Dialog from '../../../components/Dialog';
 import api from '../../../services/api';
+import cep from 'cep-promise';
+import Select from 'react-select'
+import Logo from '../../../assets/logo.png'
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -39,7 +43,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony, reloadProducts, ...rest }) => {
+const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony, setAccepted, reloadProducts, ...rest }) => {
   const classes = useStyles();
 
   const [openDialog, setOpen] = useState(false);
@@ -55,25 +59,35 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
     setOpen(false);
   };
 
-  /*
   const [saleType, setSaleType] = useState('balcony');
 
+  const [paymentType, setPaymentType] = useState('balcony');
   const [clientName, setClientName] = useState();
-  const [clientCEP, setClientCEP] = useState();
+  const [clientCEP, setClientCEP] = useState('');
   const [clientNeighborhood, setClientNeighborhood] = useState();
   const [clientStreet, setClientStreet] = useState();
   const [clientNumber, setClientNumber] = useState();
   const [clientComplement, setClientComplement] = useState();
-  */
+  const [chargeFor, setChargeFor] = useState();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1); 
 
   const [selectedProducts, setSelectedProducts] = useState([]);
 
+  const [insertedDemand, setInsertedDemand] = useState({});
+
   const [openErrorDialog, setOpenErrorDialog] = useState(false);
   const [errorDialogTitle, setErrorDialogTitle] = useState('');
   const [errorDialogMessage, setErrorDialogMessage] = useState('');
+
+  const [deliveryValue, setDeliveryValue] = useState(0);
+
+  useEffect(() => {
+    api.get('delivery-tax').then(res => {
+      setDeliveryValue(res.data.tax);
+    });
+  })
 
   const handleClickOpenErrorDialog = () => {
     setOpenErrorDialog(true);
@@ -83,18 +97,60 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
     setOpenErrorDialog(false);
   };
 
+  useEffect(() => {
+    if(saleType == 'balcony'){
+      setPaymentType('balcony');
+    }
+  }, [saleType])
+
+  useEffect(() => {
+    if(clientCEP.length >= 8){
+      cep(clientCEP).then(res => {
+        if(res){
+          setClientNeighborhood(res.neighborhood);
+          setClientStreet(res.street);
+        }
+      })
+    }
+  }, [clientCEP])
+
+  useEffect(() => {
+    if(paymentType == 'delivery-card')
+      setChargeFor(null);
+  }, [paymentType])
+
   const submit = () => {
-    printDemand();
     if(selectedProducts.length > 0){
+      printDemand();
       setSubmiting(true);
       api.post('dashboard/store/demand', {
         items: selectedProducts,
+        client_name: clientName,
+        payment_type: paymentType,
+        status: saleType == 'balcony' ? 'balcony' : 'accepted',
+        cep: clientCEP,
+        neighborhood: clientNeighborhood,
+        street: clientStreet,
+        number: clientNumber,
+        complement: clientComplement,
+        charge_for: chargeFor,
       }).then(res => {
         //printDiv();
         handleCloseDialog();
         setSubmiting(false);
         setSelectedProducts([]);
-        setBalcony([...balcony, res.data.demand]);
+        if(saleType == 'balcony')
+          setBalcony([...balcony, res.data.demand]);
+        else
+          setAccepted([...accepted, res.data.demand]);
+        setInsertedDemand(res.data.demand);
+        setClientCEP('');
+        setClientComplement('');
+        setClientName('');
+        setClientNeighborhood('');
+        setClientNumber('');
+        setClientStreet('');
+        setChargeFor('');
       }).catch(err => {
         console.log(err.response);
         if(err.response.data.error == 'out of qtd'){
@@ -107,15 +163,21 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
     }
   };
 
-  function changeProductSelect(index){
-    setSelectedProduct(products[index]);
+  function changeProductSelect(id){
+    const aux = products;
+    let product = {};
+    for(let i = 0; i < aux.length; i++){
+      if(aux[i].id == id){
+        product = aux[i];
+      }
+    }
+    setSelectedProduct(product);
     setSelectedQuantity(1);
   }
 
   function selectProduct(){
     if(selectedProduct != null && selectedQuantity >= 0) {
-      selectedProduct.qtd = selectedQuantity;
-      setSelectedProducts([...selectedProducts, selectedProduct]);
+      setSelectedProducts([...selectedProducts, {id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, promo_price: selectedProduct.promo_price, qtd: selectedQuantity}]);
     }
   }
 
@@ -125,7 +187,7 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
     setSelectedProducts([...array]);
   }
 
-  function total(){
+  function total(delivery = false){
     var total = 0.0;
 
     for(let i = 0; i < selectedProducts.length; i++){
@@ -135,6 +197,9 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
         total += parseFloat(selectedProducts[i].price) * parseFloat(selectedProducts[i].qtd);
       }
     }
+
+    if(delivery)
+      total += deliveryValue;
 
     return total.toFixed(2).toString().replace('.', ',');
   }
@@ -163,11 +228,19 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
             <table class="printer-ticket">
               <thead>
                 <tr>
-                    <th class="title" colspan="3">DEPÓSITO DE PÃES EMPÓRIO</th>
+                    <th class="title" colspan="3"><img src={Logo} style={{maxWidth: 150}}/></th>
                 </tr>
                 <tr>
                     <th colspan="3">{new Date().toLocaleDateString('pt-br')}</th>
                 </tr>
+                {
+                  clientName &&
+                  <tr>
+                      <th colspan="3">
+                          {clientName}
+                      </th>
+                  </tr>
+                }
                 <tr>
                     <th class="ttu" colspan="3">
                         <b>Cupom não fiscal</b>
@@ -196,6 +269,58 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
                 }
               </tbody>
               <tfoot>
+                {
+                  clientNeighborhood &&
+                  <>
+                  <tr class="sup p--0">
+                      <td colspan="3">
+                          <b>Endereço</b>
+                      </td>
+                  </tr>
+                  <tr class="ttu"><td>{clientNeighborhood}, {clientStreet}, {clientNumber} {clientComplement ? ',' + clientComplement : ''}</td></tr>
+                  </>
+                }
+                {
+                  paymentType &&
+                  <>
+                  <tr class="sup p--0">
+                      <td colspan="3">
+                          <b>Pagamento</b>
+                      </td>
+                  </tr>
+                  <tr class="ttu">
+                    <td>
+                      {{
+                        'delivery': 'Dinheiro',
+                        'delivery-card': 'Cartão'
+                      }[paymentType]}
+                    </td>
+                  </tr>
+                  </>
+                }
+                {
+                  (chargeFor != null && paymentType == 'delivery') &&
+                  <>
+                  <tr class="sup p--0">
+                      <td colspan="3">
+                          <b>Troco para</b>
+                      </td>
+                  </tr>
+                  <tr class="ttu"><td>R${parseFloat(chargeFor.replace(',', '.')).toFixed(2).replace('.', ',')}</td></tr>
+                  </>
+                }
+                {
+                  saleType != 'balcony' &&
+                  
+                  <tr class="sup ttu p--0">
+                    <td colspan="2">
+                        <b>Entrega</b>
+                    </td>
+                    <td align="right">
+                        R${parseFloat(deliveryValue).toFixed(2).replace('.', ',')}
+                    </td>
+                </tr>
+                }
                 <tr class="sup ttu p--0">
                     <td colspan="3">
                         <b>Totais</b>
@@ -203,7 +328,7 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
                 </tr>
                 <tr class="ttu">
                     <td colspan="2">Total</td>
-                    <td align="right">R${total()}</td>
+                    <td align="right">R${total(saleType != 'balcony')}</td>
                 </tr>
               </tfoot>
             </table>
@@ -243,8 +368,6 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
         }
       >
         <form>
-          {
-            /*
           <FormControl fullWidth className={classes.margin}>
             <TextField
               id="standard-select-currency"
@@ -263,15 +386,62 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
               </MenuItem>
             </TextField>
           </FormControl>
-            */
-          }
 
           {
-            /*
             saleType == 'delivery' &&
             <>
 
               <Grid container spacing={3}>
+                <Grid item xl={12} lg={12} sm={12} xs={12}>
+                  <FormControl fullWidth className={classes.margin}>
+                    <TextField
+                      id="standard-select-currency"
+                      select
+                      label="Pagamento"
+                      helperText="Dinheiro ou cartão"
+                      onChange={(e) => setPaymentType(e.target.value)}
+                      value={paymentType}
+                      required
+                    >
+                      <MenuItem value={'delivery'}>
+                        Dinheiro
+                      </MenuItem>
+                      <MenuItem value={'delivery-card'}>
+                        Cartão
+                      </MenuItem>
+                    </TextField>
+                  </FormControl>
+                </Grid>
+                {
+                  paymentType === 'delivery' &&
+                  <Grid item xl={12} lg={12} sm={12} xs={12}>
+                    <FormControl fullWidth className={classes.margin}>
+                      <TextField id="charge-for" label="Troco para" onChange={(e) => setChargeFor(e.target.value)} value={chargeFor}/>
+                    </FormControl>
+                  </Grid>
+                }
+                {
+                  /*
+                  paymentType === 'delivery-card' &&
+                  <Grid item xl={12} lg={12} sm={12} xs={12}>
+                    <FormControl fullWidth className={classes.margin}>
+                      <TextField
+                        id="standard-select-currency"
+                        select
+                        label="Maquininha"
+                        helperText="Bandeira maquininha"
+                        onChange={(e) => setPaymentType(e.target.value)}
+                        value={paymentType}
+                        required
+                      >
+                        <MenuItem value={'alelo'}>
+                          Alelo
+                        </MenuItem>
+                      </TextField>
+                    </FormControl>
+                  </Grid>
+                  */
+                }
                 <Grid item xl={12} lg={12} sm={12} xs={12}>
                   <FormControl fullWidth className={classes.margin}>
                     <TextField id="standard-basic" label="Nome do cliente" onChange={(e) => setClientName(e.target.value)} value={clientName} required/>
@@ -299,18 +469,30 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
                 </Grid>
                 <Grid item xl={3} lg={3} sm={12} xs={12}>
                   <FormControl fullWidth className={classes.margin}>
-                    <TextField id="standard-basic" label="Complemento" onChange={(e) => setClientComplement(e.target.value)} value={clientComplement} required/>
+                    <TextField id="standard-basic" label="Complemento" onChange={(e) => setClientComplement(e.target.value)} value={clientComplement}/>
                   </FormControl>
                 </Grid>
               </Grid>
               
             </>
-            */
           }
 
           <Grid container spacing={3}>
             <Grid item lg={6} sm={12} xl={8} xs={12}>
               <FormControl fullWidth className={classes.margin}>
+              <Autocomplete
+                options={products}
+                getOptionLabel={(product) => `${product.name} (R$${product.price.toFixed(2).toString().replace('.', ',')}) (${product.qtd}uni.)`}
+                id="products"
+                autoHighlight
+                renderInput={(params) => <TextField {...params} label="Produto*" />}
+                onChange={(event, newValue) => {
+                  if(newValue)
+                    changeProductSelect(newValue.id);
+                }}
+              />
+              {
+                /*
                 <TextField
                   id="standard-select-currency"
                   select
@@ -328,6 +510,8 @@ const Toolbar = ({ className, delivered, accepted, products, balcony, setBalcony
                     ))
                   }
                 </TextField>
+                */
+              }
               </FormControl>
             </Grid>
             <Grid item lg={3} sm={12} xl={3} xs={12}>

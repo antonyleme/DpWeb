@@ -100,7 +100,7 @@ const Results = ({ className, users, ...rest }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.slice(0, limit).map((user) => (
+              {users.map((user) => (
                 <TableRow
                   hover
                   key={user.id}

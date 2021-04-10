@@ -32,11 +32,12 @@ const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState()
 
   const token = useSelector(state => state.auth.token);
 
   useEffect(() => {
-    if(token){
+    if (token) {
       api.get('products').then(res => {
         setProducts(res.data.products);
         setLoading(false)
@@ -53,39 +54,42 @@ const ProductList = () => {
 
   return (
     token == null ?
-    <Navigate to="/login"/>
-    :
-    <Page
-      className={classes.root}
-      title="Products"
-    >
-      <Container maxWidth={false}>
-        <Toolbar categories={categories} products={products} setProducts={setProducts}/>
-        <Box mt={3}>
-          <Grid
-            container
-            spacing={3}
-          >
-            {products.map((product) => (
-              <Grid
-                item
-                key={product.id}
-                lg={3}
-                md={4}
-                xs={12}
-              >
-                <ProductCard
-                  className={classes.productCard}
-                  product={product}
-                  categories={categories}
-                  removeProduct={removeProduct}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-      </Container>
-    </Page>
+      <Navigate to="/login" />
+      :
+      <Page
+        className={classes.root}
+        title="Products"
+      >
+        <Container maxWidth={false}>
+          <Toolbar categories={categories} products={products} setProducts={setProducts} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <Box mt={3}>
+            <Grid
+              container
+              spacing={3}
+            >
+              {products.map((product) => (
+                (searchTerm == null || product.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                <Grid
+                  item
+                  key={product.id}
+                  lg={3}
+                  md={4}
+                  xs={12}
+                >
+                  <ProductCard
+                    className={classes.productCard}
+                    product={product}
+                    categories={categories}
+                    removeProduct={removeProduct}
+                    products={products}
+                    setProducts={setProducts}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </Container>
+      </Page>
   );
 };
 

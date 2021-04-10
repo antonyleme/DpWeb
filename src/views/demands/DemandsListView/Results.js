@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import moment from 'moment';
@@ -21,6 +21,7 @@ import {
 import getInitials from 'src/utils/getInitials';
 import DemandDialog from '../../../components/DemandDialog';
 import VisibilityIcon from '@material-ui/icons/Visibility';
+import api from '../../../services/api';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -34,15 +35,25 @@ const Results = ({ className, searchId, demands, ...rest }) => {
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
   const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(0);
+  const [deliveryTax, setDeliveryTax] = useState(0);
 
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    api.get('delivery-tax').then(res => {
+      setDeliveryTax(res.data.tax);
+    })
+  }, []);
+
   function handleClickOpenDialog(demand){
     selectDemand(demand);
     setOpen(true);
   }
+
   function handleClose(){
     setOpen(false);
   }
+
   const [selectedDemand, selectDemand] = useState(null);
 
   const handleSelectAll = (event) => {
@@ -209,7 +220,7 @@ const Results = ({ className, searchId, demands, ...rest }) => {
                         color="textPrimary"
                         variant="body1"
                       >
-                        {demand.status != 'balcony' && demand.user.name}
+                        {(demand.status != 'balcony' && demand.user) && demand.user.name}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -217,7 +228,7 @@ const Results = ({ className, searchId, demands, ...rest }) => {
                     { demand.status != 'balcony' && (demand.street + ', ' + demand.number + ', ' + (demand.complement ? demand.complement + ', ' : '') + demand.neighborhood)}
                   </TableCell>
                   <TableCell>
-                    {demand.status != 'balcony' && demand.user.tel}
+                    {(demand.status != 'balcony' && demand.user) && demand.user.tel}
                   </TableCell>
                   <TableCell>
                     {moment(demand.created_at).format('DD/MM/YYYY')}
@@ -240,7 +251,7 @@ const Results = ({ className, searchId, demands, ...rest }) => {
         </Box>
       </PerfectScrollbar>
 
-      <DemandDialog open={open} demand={selectedDemand} handleClose={handleClose}/>
+      <DemandDialog open={open} demand={selectedDemand} handleClose={handleClose} deliveryTax={deliveryTax}/>
     </Card>
   );
 };
